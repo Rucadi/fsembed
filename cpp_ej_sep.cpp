@@ -199,12 +199,14 @@ void compile(std::vector<Entry>& entries,
     compile_folders.push_back("#include \"include.hpp\"");
     compile_folders.push_back("namespace "+std::string(nspace)+"{");
     
-    compile_folders.push_back("const std::array<Folder, " + std::to_string(folders.size()) + "> folders{");
+    compile_folders.push_back("const std::array<Folder, " + std::to_string(folders.size()+2) + "> folders{");
+    compile_folders.push_back("Folder{ \"\", nullptr, nullptr},");
     for (auto [idx, folder] : folders | std::views::enumerate)
     {
         std::string sidx = std::to_string(idx);
         compile_folders.push_back("Folder{\"" + folder.path + "\", &_" + std::to_string(folder.start_idx) + ", &_" + std::to_string(folder.end_idx) + "},");
     }
+    compile_folders.push_back("Folder{ \"\", nullptr, nullptr},");
     compile_folders.push_back("};");
     compile_folders.push_back("}");
     compile_folders.realize();
@@ -216,7 +218,7 @@ void compile(std::vector<Entry>& entries,
     compile_include.push_back("#include <array>");
     compile_include.push_back("#include \"../../include/fsembed.hpp\"");
     compile_include.push_back("namespace "+std::string(nspace)+"{");
-    compile_include.push_back("extern const std::array<fsembed::Folder, " + std::to_string(folders.size()) + "> folders;");
+    compile_include.push_back("extern const std::array<fsembed::Folder, " + std::to_string(folders.size()+2) + "> folders;");
     compile_include.push_back("}");
     compile_include.realize();
 
