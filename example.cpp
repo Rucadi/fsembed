@@ -1,6 +1,6 @@
 #include "fsembed_filesystems/example/include.hpp"
 #include <iostream>
-#include "include/fsutils.hpp"
+#include "include/fsembed.hpp"
 
 int main()
 {

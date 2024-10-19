@@ -1,10 +1,34 @@
+
 #pragma once
-#include "fsembed.hpp"
 #include <span>
 #include <coroutine>
 #include <span>
 #include <ranges>
 #include <optional>
+#include <string_view>
+
+
+
+#ifndef FSEMBED_INTERNAL_DEF
+#define FSEMBED_INTERNAL_DEF
+namespace fsembed
+{    
+    struct Entry
+    {
+        std::string_view name;
+        std::string_view content;
+        const Entry* next;
+    };
+
+    struct Folder 
+    {
+        std::string_view path;
+        const Entry* start;
+        const Entry* end;
+    };
+}
+#endif
+
 
 namespace fsembed
 {

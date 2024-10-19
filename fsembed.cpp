@@ -11,41 +11,26 @@
 #include <deque>
 
 
-constexpr auto Makefile = R"(
-# Compiler
-CXX = clang++
+constexpr auto Makefile = []{
+		static constexpr char _sbo[]{
+			#embed "embeddings/Makefile"
+		};
+		return std::string_view{_sbo, sizeof(_sbo)};
+	}();
 
-# Compiler flags
-CXXFLAGS = -std=c++23 
+constexpr auto fsembed_internal = []{
+		static constexpr char _sbo[]{
+			#embed "embeddings/fsembed_internal.hpp"
+		};
+		return std::string_view{_sbo, sizeof(_sbo)};
+	}();
 
-# Output object file
-OUTPUT = fsembed.o
-
-# Source files
-SOURCES = $(wildcard *.cpp)
-
-# Object files
-OBJECTS = $(SOURCES:.cpp=.o)
-
-# Default target
-all: $(OUTPUT)
-
-# Create a single .o file from all object files
-$(OUTPUT): $(OBJECTS)
-	ar rcs $@ $^
-	rm -f $(OBJECTS)
-
-
-# Compile source files into object files
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Clean up generated files
-clean:
-	rm -f $(OBJECTS) $(OUTPUT)
-
-.PHONY: all clean
-)";
+constexpr auto fsembed_hpp = []{
+		static constexpr char _sbo[]{
+			#embed "embeddings/fsembed.hpp"
+		};
+		return std::string_view{_sbo, sizeof(_sbo)};
+	}();
 
 struct Entry
 {
@@ -120,6 +105,7 @@ struct output_file{
 
     void realize()
     {
+        std::filesystem::create_directories(std::filesystem::path(path).parent_path());
         std::ofstream file(path);
         for(auto& line : file_contents)
         {
@@ -184,7 +170,7 @@ void compile(std::vector<Entry>& entries,
     //extern_defs.hpp header
     output_file compile_header{output_dir / nspace / "extern_defs.hpp", {}};
     compile_header.push_front("#pragma once");
-    compile_header.push_back("#include \"../../include/fsembed.hpp\"");
+    compile_header.push_back("#include \"fsembed_internal.hpp\"");
     compile_header.push_back("using fsembed::Entry;");
     compile_header.push_back("using fsembed::Folder;");
     compile_header.push_back("namespace "+std::string(nspace)+"{");
@@ -222,15 +208,19 @@ void compile(std::vector<Entry>& entries,
     output_file compile_include{output_dir / nspace / "include.hpp", {}};
     compile_include.push_back("#pragma once");
     compile_include.push_back("#include <array>");
-    compile_include.push_back("#include \"../../include/fsembed.hpp\"");
+    compile_include.push_back("#include \"fsembed_internal.hpp\"");
     compile_include.push_back("namespace "+std::string(nspace)+"{");
     compile_include.push_back("extern const std::array<fsembed::Folder, " + std::to_string(folders.size()+2) + "> folders;");
     compile_include.push_back("}");
     compile_include.realize();
 
+    output_file internal_include{output_dir / nspace / "fsembed_internal.hpp", {}};
+    internal_include.push_back(fsembed_internal.data());
+    internal_include.realize();
+
     // Generate the Makefile
     output_file makefile{output_dir / nspace / "Makefile", {}};
-    makefile.push_back(Makefile);
+    makefile.push_back(Makefile.data());
     makefile.realize();
 
 }
@@ -345,4 +335,8 @@ int main(int argc, char** argv)
 
     std::cout<<"Compiling "<<entries.size()<<" entries and "<<folder_entries.size()<<" folders\n";
     compile(entries, folder_entries, folder_name, "fsembed_filesystems", !flags.count("--absolute"));
+
+    output_file fsembed_hpp_file{"include/fsembed.hpp", {}};
+    fsembed_hpp_file.push_back(fsembed_hpp.data());
+    fsembed_hpp_file.realize();
 }
