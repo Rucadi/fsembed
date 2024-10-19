@@ -135,7 +135,13 @@ void compile(std::vector<Entry>& entries,
             bool is_relative = true)
 {
 
-    std::filesystem::create_directories(output_dir / nspace);
+    auto full_path = output_dir / nspace;
+    if (std::filesystem::exists(full_path))
+    {
+        std::filesystem::remove_all(full_path);
+    }
+    
+    std::filesystem::create_directories(full_path);
 
     //Generate all the file entries
     size_t accum_size = 0;
